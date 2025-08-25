@@ -13,11 +13,11 @@ public class SolicitudEntity {
     @Id
     private int id;
     private double monto;
-    private int plazo;
     private String email;
     private int idEstado;
     private int idTipoPrestamo;
     private String documentoIdentificacion;
     private LocalDate fechaSolicitud;
+    private int plazo;
 
 }

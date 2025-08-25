@@ -1,9 +1,9 @@
-package co.com.pragma.r2dbc.entity.enums;
+package co.com.pragma.api.enums;
 
 import lombok.Getter;
 
 @Getter
-public enum EstadoUsuario {
+public enum EstadoSolicitud {
     PENDIENTE(1),
     EN_REVISION(2),
     APROBADO(3),
@@ -11,12 +11,12 @@ public enum EstadoUsuario {
 
     private final int codigo;
 
-    EstadoUsuario(int codigo) {
+    EstadoSolicitud(int codigo) {
         this.codigo = codigo;
     }
 
-    public static EstadoUsuario fromCodigo(int codigo) {
-        for (EstadoUsuario estado : values()) {
+    public static EstadoSolicitud fromCodigo(int codigo) {
+        for (EstadoSolicitud estado : values()) {
             if (estado.codigo == codigo) {
                 return estado;
             }

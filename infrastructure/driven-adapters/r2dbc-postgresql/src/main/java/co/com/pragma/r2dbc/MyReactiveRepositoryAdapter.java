@@ -22,17 +22,21 @@ public class MyReactiveRepositoryAdapter extends ReactiveAdapterOperations<
 
     @Override
     public Mono<Solicitud> saveSolicitud(Solicitud solicitud) {
-        return repository.save(mapper.map(solicitud, SolicitudEntity.class))
+        SolicitudEntity entity = mapper.map(solicitud, SolicitudEntity.class);
+        entity.setFechaSolicitud(java.time.LocalDate.parse(solicitud.getFechaSolicitud()));
+        return repository.save(entity)
                 .map(e -> mapper.map(e, Solicitud.class));
     }
 
     @Override
     public Flux<Solicitud> findAllSolicitudes() {
-        return repository.findAll().map(entity -> mapper.map(entity, Solicitud.class));
+        return repository.findAll().map(entity -> mapper.map(entity,
+                Solicitud.class));
     }
 
     @Override
     public Flux<Solicitud> findByEmail(String email) {
-        return repository.findByEmail(email).map(entity -> mapper.map(entity, Solicitud.class));
+        return repository.findByEmail(email).map(entity -> mapper.map(entity,
+                Solicitud.class));
     }
 }

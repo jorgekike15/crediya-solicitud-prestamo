@@ -9,11 +9,11 @@ import lombok.*;
 @Builder(toBuilder = true)
 public class Solicitud {
     private String id;
-    private String idUsuario;
     private String monto;
     private String plazo;
     private String email;
-    private String idEstadoSolicitud;
+    private int idEstado;
     private String fechaSolicitud;
     private String idTipoPrestamo;
+    private String documentoIdentificacion;
 }
