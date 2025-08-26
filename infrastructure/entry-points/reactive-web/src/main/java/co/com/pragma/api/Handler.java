@@ -1,5 +1,7 @@
 package co.com.pragma.api;
 
+import co.com.pragma.api.dto.CreateSolicitudDTO;
+import co.com.pragma.api.dto.SolicitudResponseDTO;
 import co.com.pragma.api.mapper.SolicitudDTOMapper;
 import co.com.pragma.usecase.solicitud.SolicitudUseCase;
 import jakarta.validation.ConstraintViolation;

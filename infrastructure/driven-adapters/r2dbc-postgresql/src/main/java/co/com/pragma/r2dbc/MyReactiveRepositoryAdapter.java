@@ -17,7 +17,7 @@ public class MyReactiveRepositoryAdapter extends ReactiveAdapterOperations<
         MyReactiveRepository
         > implements SolicitudRepository {
     public MyReactiveRepositoryAdapter(MyReactiveRepository repository, ObjectMapper mapper) {
-        super(repository, mapper, d -> mapper.map(d, Solicitud.class/* change for domain model */));
+        super(repository, mapper, d -> mapper.map(d, Solicitud.class));
     }
 
     @Override

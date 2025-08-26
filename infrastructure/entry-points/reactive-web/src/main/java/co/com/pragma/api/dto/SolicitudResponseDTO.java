@@ -1,4 +1,4 @@
-package co.com.pragma.api;
+package co.com.pragma.api.dto;
 
 public record SolicitudResponseDTO(
         String monto,

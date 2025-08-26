@@ -1,15 +1,13 @@
 package co.com.pragma.api.mapper;
 
-import co.com.pragma.api.CreateSolicitudDTO;
-import co.com.pragma.api.SolicitudResponseDTO;
+import co.com.pragma.api.dto.CreateSolicitudDTO;
+import co.com.pragma.api.dto.SolicitudResponseDTO;
 import co.com.pragma.api.enums.EstadoSolicitud;
 import co.com.pragma.api.enums.TipoPrestamo;
 import co.com.pragma.model.solicitud.Solicitud;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;
-
-import java.util.List;
 
 @Mapper(componentModel = "spring")
 public interface SolicitudDTOMapper {

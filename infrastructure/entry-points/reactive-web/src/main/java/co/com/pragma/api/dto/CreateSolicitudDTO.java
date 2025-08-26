@@ -1,4 +1,4 @@
-package co.com.pragma.api;
+package co.com.pragma.api.dto;
 
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;

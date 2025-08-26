@@ -1,6 +1,11 @@
 server:
   port: 8080
 spring:
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          secret: "1ca67cbccbbcba715a9dd252fc221741ef808143ba94d7b01d717b0389bd4ea4f680250033cfd457d1d0a1c9a79046bde8771a1d24345a3b63695787b466be2d"
   application:
     name: "crediya-solicitud-prestamo"
   devtools:
