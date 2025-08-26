@@ -1,12 +1,11 @@
-package co.com.pragma.model.solicitud.gateways;
+package co.com.pragma.usecase.solicitud.in;
 
 import co.com.pragma.model.solicitud.Solicitud;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-public interface SolicitudRepository {
+public interface SolicitudUseCasePort {
 
-    Mono<Solicitud> saveSolicitud(Solicitud solicitud);
-
+    Mono<Solicitud> crearSolicitud(Solicitud solicitud);
     Flux<Solicitud> findAllSolicitudes();
 }

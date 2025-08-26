@@ -33,10 +33,4 @@ public class MyReactiveRepositoryAdapter extends ReactiveAdapterOperations<
         return repository.findAll().map(entity -> mapper.map(entity,
                 Solicitud.class));
     }
-
-    @Override
-    public Flux<Solicitud> findByEmail(String email) {
-        return repository.findByEmail(email).map(entity -> mapper.map(entity,
-                Solicitud.class));
-    }
 }

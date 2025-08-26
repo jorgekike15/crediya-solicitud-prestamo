@@ -1,11 +1,14 @@
 package co.com.pragma.config;
 
+import co.com.pragma.model.cliente.gateway.ClienteGateway;
+import co.com.pragma.model.solicitud.gateways.SolicitudRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.mock;
 
 public class UseCasesConfigTest {
 
@@ -29,6 +32,16 @@ public class UseCasesConfigTest {
     @Configuration
     @Import(UseCasesConfig.class)
     static class TestConfig {
+
+        @Bean
+        public ClienteGateway clienteGateway() {
+            return mock(ClienteGateway.class);
+        }
+
+        @Bean
+        public SolicitudRepository solicitanteRepository() {
+            return mock(SolicitudRepository.class);
+        }
 
         @Bean
         public MyUseCase myUseCase() {

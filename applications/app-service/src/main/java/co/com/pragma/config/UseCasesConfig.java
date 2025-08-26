@@ -1,8 +1,10 @@
 package co.com.pragma.config;
 
-import org.springframework.context.annotation.ComponentScan;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.FilterType;
+import co.com.pragma.model.cliente.gateway.ClienteGateway;
+import co.com.pragma.model.solicitud.gateways.SolicitudRepository;
+import co.com.pragma.usecase.solicitud.SolicitudUseCase;
+import co.com.pragma.usecase.solicitud.in.SolicitudUseCasePort;
+import org.springframework.context.annotation.*;
 
 @Configuration
 @ComponentScan(basePackages = "co.com.pragma.usecase",
@@ -11,4 +13,18 @@ import org.springframework.context.annotation.FilterType;
         },
         useDefaultFilters = false)
 public class UseCasesConfig {
+
+    private final SolicitudRepository solicitudRepository;
+    private final ClienteGateway clienteGateway;
+
+    public UseCasesConfig(SolicitudRepository solicitudRepository, ClienteGateway clienteGateway) {
+        this.solicitudRepository = solicitudRepository;
+        this.clienteGateway = clienteGateway;
+    }
+
+    @Bean
+    @Primary
+    public SolicitudUseCasePort solicitudUseCasePort(){
+        return new SolicitudUseCase(solicitudRepository, clienteGateway);
+    }
 }
