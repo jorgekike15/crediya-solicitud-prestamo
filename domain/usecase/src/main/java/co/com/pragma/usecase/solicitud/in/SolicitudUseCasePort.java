@@ -6,6 +6,6 @@ import reactor.core.publisher.Mono;
 
 public interface SolicitudUseCasePort {
 
-    Mono<Solicitud> crearSolicitud(Solicitud solicitud);
+    Mono<Solicitud> crearSolicitud(Solicitud solicitud, String token);
     Flux<Solicitud> findAllSolicitudes();
 }

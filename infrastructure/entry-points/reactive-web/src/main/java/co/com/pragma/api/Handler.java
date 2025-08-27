@@ -36,28 +36,30 @@ public class Handler {
         if (log.isTraceEnabled()) {
             log.trace(MessageFormat.format(bundle.getString("log.method.start"), "listenGETSaveSolicitud"));
         }
-        return serverRequest.bodyToMono(CreateSolicitudDTO.class)
-                .doOnNext(request -> log.debug(MessageFormat.format(
-                        bundle.getString("log.payload.received"), request)))
-                .flatMap(this::validacion)
-                .doOnNext(valid -> log.trace(bundle.getString("log.payload.valid")))
-                .map(solicitudDTOMapper::toModelCreate)
-                .doOnNext(domain -> log.debug(MessageFormat.format(bundle
-                        .getString("log.domain.generated"), domain)))
-                .flatMap(solicitud -> solicitudUseCase.crearSolicitud(solicitud)
-                        .as(transactionalOperator::transactional))
-                .map(solicitudDTOMapper::toResponse)
-                .doOnSuccess(saved -> log.info(MessageFormat.format(
-                        bundle.getString("log.solicitud.created"), saved)))
-                .doOnError(error -> log.error(bundle.getString("log.solicitud.create.error"), error))
-                .flatMap(saved -> {
-                    log.trace(MessageFormat.format(bundle.getString("log.response.building"), saved));
-                    return ServerResponse.status(org.springframework.http.HttpStatus.CREATED).bodyValue(saved);
-                })
-                .doFinally(signalType -> log.info(
-                MessageFormat.format(bundle.getString("log.method.end"),
-                        "listenGETSaveSolicitud", signalType)
-        ));
+        return Mono.justOrEmpty(serverRequest.headers().firstHeader("Authorization"))
+                .flatMap(token -> serverRequest.bodyToMono(CreateSolicitudDTO.class)
+                        .doOnNext(request -> log.debug(MessageFormat.format(
+                                bundle.getString("log.payload.received"), request)))
+                        .flatMap(this::validacion)
+                        .doOnNext(valid -> log.trace(bundle.getString("log.payload.valid")))
+                        .map(solicitudDTOMapper::toModelCreate)
+                        .doOnNext(domain -> log.debug(MessageFormat.format(bundle
+                                .getString("log.domain.generated"), domain)))
+                        .flatMap(solicitud -> solicitudUseCase.crearSolicitud(solicitud, token)
+                                .as(transactionalOperator::transactional))
+                        .map(solicitudDTOMapper::toResponse)
+                        .doOnSuccess(saved -> log.info(MessageFormat.format(
+                                bundle.getString("log.solicitud.created"), saved)))
+                        .doOnError(error -> log.error(bundle.getString("log.solicitud.create.error"), error))
+                        .flatMap(saved -> {
+                            log.trace(MessageFormat.format(bundle.getString("log.response.building"), saved));
+                            return ServerResponse.status(org.springframework.http.HttpStatus.CREATED).bodyValue(saved);
+                        })
+                        .doFinally(signalType -> log.info(
+                                MessageFormat.format(bundle.getString("log.method.end"),
+                                        "listenGETSaveSolicitud", signalType)
+                        ))
+                );
     }
 
     public Mono<ServerResponse> listenGETGetAllSolicitudes(ServerRequest serverRequest) {

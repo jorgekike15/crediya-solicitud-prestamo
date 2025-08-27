@@ -15,13 +15,13 @@ public class SolicitudUseCase implements SolicitudUseCasePort {
     private final ClienteGateway clienteGateway;
 
     @Override
-    public Mono<Solicitud> crearSolicitud(Solicitud solicitud){
-        return clienteGateway.usuarioExist(solicitud.getDocumentoIdentificacion())
-                .flatMap(existe -> {
-                    if (!existe) {
-                        return Mono.error(new IllegalArgumentException("Cliente no válido"));
+    public Mono<Solicitud> crearSolicitud(Solicitud solicitud, String token) {
+        return clienteGateway.usuarioExist(solicitud.getDocumentoIdentificacion(), token)
+                .flatMap(userValidation -> {
+                    if (userValidation.isExist()) {
+                        return solicitudRepository.saveSolicitud(solicitud);
                     }
-                    return solicitudRepository.saveSolicitud(solicitud);
+                    return Mono.error(new IllegalArgumentException(userValidation.getMessage()));
                 });
     }
 

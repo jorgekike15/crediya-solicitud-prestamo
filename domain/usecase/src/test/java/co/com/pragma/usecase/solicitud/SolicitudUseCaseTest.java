@@ -17,6 +17,7 @@ class SolicitudUseCaseTest {
     private SolicitudRepository solicitudRepository;
     private ClienteGateway clienteGateway;
     private SolicitudUseCase solicitudUseCase;
+    private static final String token = "dummyToken";
 
     @BeforeEach
     void setUp() {
@@ -30,10 +31,10 @@ class SolicitudUseCaseTest {
         Solicitud solicitud = new Solicitud();
         solicitud.setDocumentoIdentificacion("123");
 
-        when(clienteGateway.usuarioExist("123")).thenReturn(Mono.just(true));
+        when(clienteGateway.usuarioExist("123",token)).thenReturn(Mono.just(true));
         when(solicitudRepository.saveSolicitud(solicitud)).thenReturn(Mono.just(solicitud));
 
-        StepVerifier.create(solicitudUseCase.crearSolicitud(solicitud))
+        StepVerifier.create(solicitudUseCase.crearSolicitud(solicitud,token))
                 .expectNext(solicitud)
                 .verifyComplete();
 
@@ -45,9 +46,9 @@ class SolicitudUseCaseTest {
         Solicitud solicitud = new Solicitud();
         solicitud.setDocumentoIdentificacion("123");
 
-        when(clienteGateway.usuarioExist("123")).thenReturn(Mono.just(false));
+        when(clienteGateway.usuarioExist("123",token)).thenReturn(Mono.just(false));
 
-        StepVerifier.create(solicitudUseCase.crearSolicitud(solicitud))
+        StepVerifier.create(solicitudUseCase.crearSolicitud(solicitud,token))
                 .expectError(IllegalArgumentException.class)
                 .verify();
 

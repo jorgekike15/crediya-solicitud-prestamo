@@ -9,6 +9,4 @@ import reactor.core.publisher.Flux;
 
 public interface MyReactiveRepository extends ReactiveCrudRepository<SolicitudEntity, Integer>, ReactiveQueryByExampleExecutor<SolicitudEntity> {
 
-    Flux<Solicitud> findByEmail(String email);
-
 }
