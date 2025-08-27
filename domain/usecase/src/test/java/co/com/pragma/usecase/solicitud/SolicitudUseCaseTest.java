@@ -1,5 +1,6 @@
 package co.com.pragma.usecase.solicitud;
 
+import co.com.pragma.model.cliente.UserDocumentValidationResponse;
 import co.com.pragma.model.cliente.gateway.ClienteGateway;
 import co.com.pragma.model.solicitud.Solicitud;
 import co.com.pragma.model.solicitud.gateways.SolicitudRepository;
@@ -9,8 +10,13 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
+import java.util.List;
+
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 class SolicitudUseCaseTest {
 
@@ -30,11 +36,13 @@ class SolicitudUseCaseTest {
     void crearSolicitud_clienteExiste_guardaSolicitud() {
         Solicitud solicitud = new Solicitud();
         solicitud.setDocumentoIdentificacion("123");
+        UserDocumentValidationResponse response = new UserDocumentValidationResponse(true,
+                "");
 
-        when(clienteGateway.usuarioExist("123",token)).thenReturn(Mono.just(true));
+        when(clienteGateway.usuarioExist("123", token)).thenReturn(Mono.just(response));
         when(solicitudRepository.saveSolicitud(solicitud)).thenReturn(Mono.just(solicitud));
 
-        StepVerifier.create(solicitudUseCase.crearSolicitud(solicitud,token))
+        StepVerifier.create(solicitudUseCase.crearSolicitud(solicitud, token))
                 .expectNext(solicitud)
                 .verifyComplete();
 
@@ -45,10 +53,12 @@ class SolicitudUseCaseTest {
     void crearSolicitud_clienteNoExiste_lanzaError() {
         Solicitud solicitud = new Solicitud();
         solicitud.setDocumentoIdentificacion("123");
+        UserDocumentValidationResponse response = new UserDocumentValidationResponse(false,
+                "Cliente no existe");
 
-        when(clienteGateway.usuarioExist("123",token)).thenReturn(Mono.just(false));
+        when(clienteGateway.usuarioExist("123", token)).thenReturn(Mono.just(response));
 
-        StepVerifier.create(solicitudUseCase.crearSolicitud(solicitud,token))
+        StepVerifier.create(solicitudUseCase.crearSolicitud(solicitud, token))
                 .expectError(IllegalArgumentException.class)
                 .verify();
 
@@ -56,14 +66,37 @@ class SolicitudUseCaseTest {
     }
 
     @Test
-    void findAllSolicitudes_retornaFlux() {
+    void findSolicitudPendienteRechazadaRevision_retornaSolicitudesFiltradas() {
         Solicitud s1 = new Solicitud();
         Solicitud s2 = new Solicitud();
+        List<Integer> codigosEstados = List.of(
+                EstadoSolicitud.PENDIENTE_REVISION.getCodigo(),
+                EstadoSolicitud.REVISION_MANUAL.getCodigo(),
+                EstadoSolicitud.RECHAZADA.getCodigo()
+        );
+
+        when(solicitudRepository.findSolicitudByEstadoIn(codigosEstados)).thenReturn(Flux.just(s1, s2));
+
+        StepVerifier.create(solicitudUseCase.findSolicitudPendienteRechazadaRevision())
+                .expectNext(s1)
+                .expectNext(s2)
+                .verifyComplete();
+
+        verify(solicitudRepository).findSolicitudByEstadoIn(codigosEstados);
+    }
+
+    @Test
+    void findAllSolicitudes_retornaTodasLasSolicitudes() {
+        Solicitud s1 = new Solicitud();
+        Solicitud s2 = new Solicitud();
+
         when(solicitudRepository.findAllSolicitudes()).thenReturn(Flux.just(s1, s2));
 
         StepVerifier.create(solicitudUseCase.findAllSolicitudes())
                 .expectNext(s1)
                 .expectNext(s2)
                 .verifyComplete();
+
+        verify(solicitudRepository).findAllSolicitudes();
     }
 }

@@ -8,6 +8,8 @@ import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.List;
+
 @RequiredArgsConstructor
 public class SolicitudUseCase implements SolicitudUseCasePort {
 
@@ -28,6 +30,16 @@ public class SolicitudUseCase implements SolicitudUseCasePort {
     @Override
     public Flux<Solicitud> findAllSolicitudes(){
         return solicitudRepository.findAllSolicitudes();
+    }
+
+    @Override
+    public Flux<Solicitud> findSolicitudPendienteRechazadaRevision() {
+        List<Integer> codigosEstados = List.of(
+                EstadoSolicitud.PENDIENTE_REVISION.getCodigo(),
+                EstadoSolicitud.REVISION_MANUAL.getCodigo(),
+                EstadoSolicitud.RECHAZADA.getCodigo()
+        );
+        return solicitudRepository.findSolicitudByEstadoIn(codigosEstados);
     }
 
 }

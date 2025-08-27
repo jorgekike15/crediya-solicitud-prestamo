@@ -6,7 +6,11 @@ import org.springframework.data.repository.query.ReactiveQueryByExampleExecutor;
 import org.springframework.data.repository.reactive.ReactiveCrudRepository;
 import reactor.core.publisher.Flux;
 
+import java.util.List;
+
 
 public interface MyReactiveRepository extends ReactiveCrudRepository<SolicitudEntity, Integer>, ReactiveQueryByExampleExecutor<SolicitudEntity> {
+
+    Flux<Solicitud> findByIdEstadoIn(List<Integer> estados);
 
 }

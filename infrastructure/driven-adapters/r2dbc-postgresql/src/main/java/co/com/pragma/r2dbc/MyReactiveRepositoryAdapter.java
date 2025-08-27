@@ -9,6 +9,8 @@ import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.List;
+
 @Repository
 public class MyReactiveRepositoryAdapter extends ReactiveAdapterOperations<
         Solicitud,
@@ -32,5 +34,11 @@ public class MyReactiveRepositoryAdapter extends ReactiveAdapterOperations<
     public Flux<Solicitud> findAllSolicitudes() {
         return repository.findAll().map(entity -> mapper.map(entity,
                 Solicitud.class));
+    }
+
+    @Override
+    public Flux<Solicitud> findSolicitudByEstadoIn(List<Integer> estados) {
+        return repository.findByIdEstadoIn(estados)
+                .map(entity -> mapper.map(entity, Solicitud.class));
     }
 }

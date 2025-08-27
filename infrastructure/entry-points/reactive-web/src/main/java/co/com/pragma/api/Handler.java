@@ -70,6 +70,14 @@ public class Handler {
                 .doFinally(signalType -> log.info("Fin de método: listenGETGetAllSolicitudes (señal: {})", signalType));
     }
 
+    public Mono<ServerResponse> listenGETGetSolicitud(ServerRequest serverRequest) {
+        log.info("Inicio de método: listenGETGetSolicitud");
+        return ServerResponse.ok()
+                .body(solicitudUseCase.findAllSolicitudes().map(solicitudDTOMapper::toResponse), SolicitudResponseDTO.class)
+                .doOnError(e -> log.error("Error al consultar todas las solicitudes", e))
+                .doFinally(signalType -> log.info("Fin de método: listenGETGetSolicitud (señal: {})", signalType));
+    }
+
     private Mono<CreateSolicitudDTO> validacion(CreateSolicitudDTO request) {
         Set<ConstraintViolation<CreateSolicitudDTO>> violaciones = validator.validate(request);
         if (!violaciones.isEmpty()) {

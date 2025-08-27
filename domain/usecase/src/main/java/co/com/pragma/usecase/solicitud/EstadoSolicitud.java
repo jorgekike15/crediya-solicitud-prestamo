@@ -1,4 +1,4 @@
-package co.com.pragma.api.enums;
+package co.com.pragma.usecase.solicitud;
 
 import lombok.Getter;
 
