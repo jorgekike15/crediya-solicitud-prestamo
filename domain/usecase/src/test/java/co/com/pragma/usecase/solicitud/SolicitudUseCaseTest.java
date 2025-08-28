@@ -4,6 +4,8 @@ import co.com.pragma.model.cliente.UserDocumentValidationResponse;
 import co.com.pragma.model.cliente.gateway.ClienteGateway;
 import co.com.pragma.model.solicitud.Solicitud;
 import co.com.pragma.model.solicitud.gateways.SolicitudRepository;
+import co.com.pragma.model.tipoprestamo.TipoPrestamo;
+import co.com.pragma.usecase.tipoprestamo.in.TipoPrestamoUseCasePort;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import reactor.core.publisher.Flux;
@@ -23,13 +25,15 @@ class SolicitudUseCaseTest {
     private SolicitudRepository solicitudRepository;
     private ClienteGateway clienteGateway;
     private SolicitudUseCase solicitudUseCase;
+    private TipoPrestamoUseCasePort tipoPrestamoUseCasePort;
     private static final String token = "dummyToken";
 
     @BeforeEach
     void setUp() {
         solicitudRepository = mock(SolicitudRepository.class);
         clienteGateway = mock(ClienteGateway.class);
-        solicitudUseCase = new SolicitudUseCase(solicitudRepository, clienteGateway);
+        tipoPrestamoUseCasePort = mock(TipoPrestamoUseCasePort.class);
+        solicitudUseCase = new SolicitudUseCase(solicitudRepository, clienteGateway, tipoPrestamoUseCasePort);
     }
 
     @Test
@@ -67,21 +71,34 @@ class SolicitudUseCaseTest {
 
     @Test
     void findSolicitudPendienteRechazadaRevision_retornaSolicitudesFiltradas() {
+        TipoPrestamo tipo1 = TipoPrestamo.builder().id(1).tasa_interes(5.0).build();
+        TipoPrestamo tipo2 = TipoPrestamo.builder().id(2).tasa_interes(7.5).build();
+
+        // Mock de solicitudes
         Solicitud s1 = new Solicitud();
+        s1.setIdTipoPrestamo("1");
         Solicitud s2 = new Solicitud();
+        s2.setIdTipoPrestamo("2");
+
         List<Integer> codigosEstados = List.of(
                 EstadoSolicitud.PENDIENTE_REVISION.getCodigo(),
                 EstadoSolicitud.REVISION_MANUAL.getCodigo(),
                 EstadoSolicitud.RECHAZADA.getCodigo()
         );
 
+        when(tipoPrestamoUseCasePort.consultAllTipoPrestamos()).thenReturn(Flux.just(tipo1, tipo2));
         when(solicitudRepository.findSolicitudByEstadoIn(codigosEstados)).thenReturn(Flux.just(s1, s2));
 
         StepVerifier.create(solicitudUseCase.findSolicitudPendienteRechazadaRevision())
-                .expectNext(s1)
-                .expectNext(s2)
+                .assertNext(sol -> {
+                    assert sol.getTasaInteres() == 5.0;
+                })
+                .assertNext(sol -> {
+                    assert sol.getTasaInteres() == 7.5;
+                })
                 .verifyComplete();
 
+        verify(tipoPrestamoUseCasePort).consultAllTipoPrestamos();
         verify(solicitudRepository).findSolicitudByEstadoIn(codigosEstados);
     }
 

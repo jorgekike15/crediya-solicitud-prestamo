@@ -7,5 +7,6 @@ public record SolicitudResponseDTO(
         String estadoSolicitud,
         String fechaSolicitud,
         String tipoPrestamo,
-        String documentoIdentificacion) {
+        String documentoIdentificacion,
+        double tasaInteres) {
 }

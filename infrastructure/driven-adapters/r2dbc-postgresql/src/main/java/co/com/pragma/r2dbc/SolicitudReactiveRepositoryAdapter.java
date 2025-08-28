@@ -12,13 +12,13 @@ import reactor.core.publisher.Mono;
 import java.util.List;
 
 @Repository
-public class MyReactiveRepositoryAdapter extends ReactiveAdapterOperations<
+public class SolicitudReactiveRepositoryAdapter extends ReactiveAdapterOperations<
         Solicitud,
         SolicitudEntity,
         Integer,
-        MyReactiveRepository
+        SolicitudReactiveRepository
         > implements SolicitudRepository {
-    public MyReactiveRepositoryAdapter(MyReactiveRepository repository, ObjectMapper mapper) {
+    public SolicitudReactiveRepositoryAdapter(SolicitudReactiveRepository repository, ObjectMapper mapper) {
         super(repository, mapper, d -> mapper.map(d, Solicitud.class));
     }
 

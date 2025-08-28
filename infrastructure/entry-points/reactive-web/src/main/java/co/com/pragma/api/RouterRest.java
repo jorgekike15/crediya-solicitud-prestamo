@@ -69,6 +69,38 @@ public class RouterRest {
                                     )
                             }
                     )
+            ),
+            @RouterOperation(
+                    path = "/api/v1/solicitud",
+                    method = RequestMethod.GET,
+                    beanClass = Handler.class,
+                    beanMethod = "listenGETGetSolicitud",
+                    operation = @Operation(
+                            operationId = "findSolicitudPendienteRechazadaRevision",
+                            summary = "Consultar solicitud pendiente, rechazada o en revisión",
+                            description = "Consulta las solicitudes que se encuentran en estados pendiente, rechazada o en revisión",
+                            responses = {
+                                    @ApiResponse(
+                                            responseCode = "200",
+                                            description = "Solicitudes obtenidas exitosamente",
+                                            content = @Content(
+                                                    schema = @Schema(
+                                                            example = """
+                                                                    [
+                                                                         {
+                                                                             "monto": "5000.0",
+                                                                             "plazo": "12",
+                                                                             "email": "usuario@correo.com",
+                                                                             "estadoSolicitud": "REVISION_MANUAL",
+                                                                             "fechaSolicitud": "2024-06-10",
+                                                                             "tipoPrestamo": "VEHICULO",
+                                                                             "documentoIdentificacion": "123456789"
+                                                                         },
+                                                                         ....""")
+                                            )
+                                    )
+                            }
+                    )
             )
     })
     @Bean
