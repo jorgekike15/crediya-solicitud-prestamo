@@ -39,6 +39,18 @@ public class MyReactiveRepositoryAdapter extends ReactiveAdapterOperations<
     @Override
     public Flux<Solicitud> findSolicitudByEstadoIn(List<Integer> estados) {
         return repository.findByIdEstadoIn(estados)
-                .map(entity -> mapper.map(entity, Solicitud.class));
+                .map(entity -> {
+                    Solicitud dto = new Solicitud();
+                    dto.setMonto(String.valueOf(entity.getMonto()));
+                    dto.setPlazo(String.valueOf(entity.getPlazo()));
+                    dto.setEmail(entity.getEmail());
+                    dto.setIdEstado(entity.getIdEstado());
+                    dto.setFechaSolicitud(
+                            entity.getFechaSolicitud() != null ? entity.getFechaSolicitud().toString() : null
+                    );
+                    dto.setIdTipoPrestamo(String.valueOf(entity.getIdTipoPrestamo()));
+                    dto.setDocumentoIdentificacion(entity.getDocumentoIdentificacion());
+                    return dto;
+                });
     }
 }

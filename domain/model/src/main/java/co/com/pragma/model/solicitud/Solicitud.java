@@ -8,7 +8,6 @@ import lombok.*;
 @AllArgsConstructor
 @Builder(toBuilder = true)
 public class Solicitud {
-    private String id;
     private String monto;
     private String plazo;
     private String email;

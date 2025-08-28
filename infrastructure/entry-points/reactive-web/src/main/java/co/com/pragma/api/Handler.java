@@ -3,7 +3,7 @@ package co.com.pragma.api;
 import co.com.pragma.api.dto.CreateSolicitudDTO;
 import co.com.pragma.api.dto.SolicitudResponseDTO;
 import co.com.pragma.api.mapper.SolicitudDTOMapper;
-import co.com.pragma.usecase.solicitud.SolicitudUseCase;
+import co.com.pragma.usecase.solicitud.in.SolicitudUseCasePort;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ValidationException;
 import jakarta.validation.Validator;
@@ -27,7 +27,7 @@ public class Handler {
 
     private static final Logger log = LoggerFactory.getLogger(Handler.class);
     private final ResourceBundle bundle = ResourceBundle.getBundle("log4j2");
-    private final SolicitudUseCase solicitudUseCase;
+    private final SolicitudUseCasePort solicitudUseCasePort;
     private final SolicitudDTOMapper solicitudDTOMapper;
     private final Validator validator;
     private final TransactionalOperator transactionalOperator;
@@ -45,7 +45,7 @@ public class Handler {
                         .map(solicitudDTOMapper::toModelCreate)
                         .doOnNext(domain -> log.debug(MessageFormat.format(bundle
                                 .getString("log.domain.generated"), domain)))
-                        .flatMap(solicitud -> solicitudUseCase.crearSolicitud(solicitud, token)
+                        .flatMap(solicitud -> solicitudUseCasePort.crearSolicitud(solicitud, token)
                                 .as(transactionalOperator::transactional))
                         .map(solicitudDTOMapper::toResponse)
                         .doOnSuccess(saved -> log.info(MessageFormat.format(
@@ -65,17 +65,24 @@ public class Handler {
     public Mono<ServerResponse> listenGETGetAllSolicitudes(ServerRequest serverRequest) {
         log.info("Inicio de método: listenGETGetAllSolicitudes");
         return ServerResponse.ok()
-                .body(solicitudUseCase.findAllSolicitudes().map(solicitudDTOMapper::toResponse), SolicitudResponseDTO.class)
+                .body(solicitudUseCasePort.findAllSolicitudes().map(solicitudDTOMapper::toResponse), SolicitudResponseDTO.class)
                 .doOnError(e -> log.error("Error al consultar todas las solicitudes", e))
                 .doFinally(signalType -> log.info("Fin de método: listenGETGetAllSolicitudes (señal: {})", signalType));
     }
 
     public Mono<ServerResponse> listenGETGetSolicitud(ServerRequest serverRequest) {
-        log.info("Inicio de método: listenGETGetSolicitud");
+        if (log.isTraceEnabled()) {
+            log.trace(MessageFormat.format(bundle.getString("log.method.start"), "listenGETGetSolicitud"));
+        }
+
         return ServerResponse.ok()
-                .body(solicitudUseCase.findAllSolicitudes().map(solicitudDTOMapper::toResponse), SolicitudResponseDTO.class)
-                .doOnError(e -> log.error("Error al consultar todas las solicitudes", e))
-                .doFinally(signalType -> log.info("Fin de método: listenGETGetSolicitud (señal: {})", signalType));
+                .body(solicitudUseCasePort.findSolicitudPendienteRechazadaRevision()
+                        .map(solicitudDTOMapper::toResponse), SolicitudResponseDTO.class)
+                .doOnError(e -> log.error(MessageFormat.format(bundle.getString("log.err.consult.all"), e)))
+                .doFinally(signalType -> log.info(
+                        MessageFormat.format(bundle.getString("log.method.end"),
+                                "listenGETGetSolicitud", signalType)
+                ));
     }
 
     private Mono<CreateSolicitudDTO> validacion(CreateSolicitudDTO request) {

@@ -39,6 +39,7 @@ public class SolicitudUseCase implements SolicitudUseCasePort {
                 EstadoSolicitud.REVISION_MANUAL.getCodigo(),
                 EstadoSolicitud.RECHAZADA.getCodigo()
         );
+
         return solicitudRepository.findSolicitudByEstadoIn(codigosEstados);
     }
 
