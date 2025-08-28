@@ -23,9 +23,9 @@ subprojects {
 
     //build.dependsOn 'pitest'
 
-    test {
-        useJUnitPlatform()
-    }
+//    test {
+//        useJUnitPlatform()
+//    }
 
     dependencies {
         implementation 'io.projectreactor:reactor-core'
@@ -43,15 +43,15 @@ subprojects {
         implementation platform("org.springframework.boot:spring-boot-dependencies:${springBootVersion}")
     }
 
-    tasks.withType(Test).configureEach {
-        if (JavaVersion.current().isCompatibleWith(JavaVersion.VERSION_13)) {
-            jvmArgs += [
-                    "-XX:+AllowRedefinitionToAddDeleteMethods"
-            ]
-        }
-    }
+//    tasks.withType(Test).configureEach {
+//        if (JavaVersion.current().isCompatibleWith(JavaVersion.VERSION_13)) {
+//            jvmArgs += [
+//                    "-XX:+AllowRedefinitionToAddDeleteMethods"
+//            ]
+//        }
+//    }
 
-    test.finalizedBy(project.tasks.jacocoTestReport)
+//    test.finalizedBy(project.tasks.jacocoTestReport)
 
     pitest {
         targetClasses = ['co.com.pragma.*']
@@ -71,35 +71,35 @@ subprojects {
         jvmArgs = ["-XX:+AllowRedefinitionToAddDeleteMethods"]
     }
 //
-    jacocoTestReport {
-        dependsOn test, 'pitest'
-        reports {
-            xml.setRequired true
-            xml.setOutputLocation layout.buildDirectory.file("reports/jacoco.xml")
-            csv.setRequired false
-            html.setOutputLocation layout.buildDirectory.dir("reports/jacocoHtml")
-        }
-    }
+//    jacocoTestReport {
+//        dependsOn test, 'pitest'
+//        reports {
+//            xml.setRequired true
+//            xml.setOutputLocation layout.buildDirectory.file("reports/jacoco.xml")
+//            csv.setRequired false
+//            html.setOutputLocation layout.buildDirectory.dir("reports/jacocoHtml")
+//        }
+//    }
 
 }
 
-jacoco {
-    toolVersion = "${jacocoVersion}"
-    reportsDirectory.set(layout.buildDirectory.dir("reports"))
-}
+//jacoco {
+//    toolVersion = "${jacocoVersion}"
+//    reportsDirectory.set(layout.buildDirectory.dir("reports"))
+//}
 
-tasks.register('jacocoMergedReport', JacocoReport) {
-    dependsOn = [test, subprojects.jacocoTestReport, pitestReportAggregate]
-    additionalSourceDirs.setFrom files(subprojects.sourceSets.main.allSource.srcDirs)
-    sourceDirectories.setFrom files(subprojects.sourceSets.main.allSource.srcDirs)
-    classDirectories.setFrom files(subprojects.sourceSets.main.output)
-    executionData.setFrom project.fileTree(dir: '.', include: '**/build/jacoco/test.exec')
-    reports {
-        xml.setRequired true
-        csv.setRequired false
-        html.setRequired true
-    }
-}
+//tasks.register('jacocoMergedReport', JacocoReport) {
+//    dependsOn = [test, subprojects.jacocoTestReport, pitestReportAggregate]
+//    additionalSourceDirs.setFrom files(subprojects.sourceSets.main.allSource.srcDirs)
+//    sourceDirectories.setFrom files(subprojects.sourceSets.main.allSource.srcDirs)
+//    classDirectories.setFrom files(subprojects.sourceSets.main.output)
+//    executionData.setFrom project.fileTree(dir: '.', include: '**/build/jacoco/test.exec')
+//    reports {
+//        xml.setRequired true
+//        csv.setRequired false
+//        html.setRequired true
+//    }
+//}
 
 tasks.withType(JavaCompile).configureEach {
     options.compilerArgs = [

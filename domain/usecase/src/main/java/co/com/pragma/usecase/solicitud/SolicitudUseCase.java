@@ -59,4 +59,11 @@ public class SolicitudUseCase implements SolicitudUseCasePort {
         );
     }
 
+    @Override
+    public Mono<Boolean> gestionarSolicitud(Integer idEstado, Integer idSolicitud) {
+        return solicitudRepository.updateSolicitud(idEstado, idSolicitud).flatMap( response ->{
+                return Mono.just(response > 0 ? Boolean.TRUE : Boolean.FALSE);
+        });
+    }
+
 }

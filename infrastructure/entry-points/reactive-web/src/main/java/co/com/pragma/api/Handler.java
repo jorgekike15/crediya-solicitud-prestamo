@@ -1,7 +1,9 @@
 package co.com.pragma.api;
 
 import co.com.pragma.api.dto.CreateSolicitudDTO;
+import co.com.pragma.api.dto.SolicitudDTO;
 import co.com.pragma.api.dto.SolicitudResponseDTO;
+import co.com.pragma.api.dto.SolicitudResponseGenericDTO;
 import co.com.pragma.api.mapper.SolicitudDTOMapper;
 import co.com.pragma.usecase.solicitud.in.SolicitudUseCasePort;
 import jakarta.validation.ConstraintViolation;
@@ -83,6 +85,35 @@ public class Handler {
                         MessageFormat.format(bundle.getString("log.method.end"),
                                 "listenGETGetSolicitud", signalType)
                 ));
+    }
+
+    public Mono<ServerResponse> listenPUTGestionarSolicitud(ServerRequest serverRequest) {
+        if (log.isTraceEnabled()) {
+            log.trace(MessageFormat.format(bundle.getString("log.method.start"), "listenPUTGestionarSolicitud"));
+        }
+
+        return serverRequest.bodyToMono(SolicitudDTO.class)
+                .flatMap(solicitudDTO ->
+                        solicitudUseCasePort.gestionarSolicitud(solicitudDTO.idEstado(), solicitudDTO.id())
+                                .flatMap(solicitudUpdated -> {
+                                    String message;
+                                    if(Boolean.TRUE.equals(solicitudUpdated)) {
+                                        message = bundle.getString("log.solicitud.updated");
+                                    }else{
+                                        message = MessageFormat.format(
+                                                bundle.getString("log.solicitud.notupdated"), solicitudDTO.id());
+                                    }
+                                    log.info(message, solicitudUpdated);
+                                    return ServerResponse.ok().bodyValue(
+                                            new SolicitudResponseGenericDTO(Boolean.TRUE.equals(solicitudUpdated), message)
+                                    );
+                                })
+                                .doOnError(e -> log.error(bundle.getString("log.solicitud.update.error"), e))
+                                .doFinally(signalType -> log.info(
+                                        MessageFormat.format(bundle.getString("log.method.end"),
+                                                "listenPUTGestionarSolicitud", signalType)
+                                ))
+                );
     }
 
     private Mono<CreateSolicitudDTO> validacion(CreateSolicitudDTO request) {

@@ -40,17 +40,33 @@ public class SolicitudReactiveRepositoryAdapter extends ReactiveAdapterOperation
     public Flux<Solicitud> findSolicitudByEstadoIn(List<Integer> estados) {
         return repository.findByIdEstadoIn(estados)
                 .map(entity -> {
-                    Solicitud dto = new Solicitud();
-                    dto.setMonto(String.valueOf(entity.getMonto()));
-                    dto.setPlazo(String.valueOf(entity.getPlazo()));
-                    dto.setEmail(entity.getEmail());
-                    dto.setIdEstado(entity.getIdEstado());
-                    dto.setFechaSolicitud(
-                            entity.getFechaSolicitud() != null ? entity.getFechaSolicitud().toString() : null
-                    );
-                    dto.setIdTipoPrestamo(String.valueOf(entity.getIdTipoPrestamo()));
-                    dto.setDocumentoIdentificacion(entity.getDocumentoIdentificacion());
-                    return dto;
+                    return mapEntityToSolicitud(entity);
                 });
+    }
+
+    @Override
+    public Mono<Solicitud> findById(Integer idSolicitud) {
+        return repository.findById(idSolicitud)
+                .map(entity -> mapper.map(entity, Solicitud.class));
+    }
+
+    @Override
+    public Mono<Integer> updateSolicitud(Integer idEstado, Integer idSolicitud) {
+        return repository.updateIdEstadoByIdSolicitud(idEstado, idSolicitud)
+                .flatMap(rowAffected -> Mono.just(rowAffected));
+    }
+
+    public static Solicitud mapEntityToSolicitud(SolicitudEntity entity) {
+        Solicitud dto = new Solicitud();
+        dto.setMonto(String.valueOf(entity.getMonto()));
+        dto.setPlazo(String.valueOf(entity.getPlazo()));
+        dto.setEmail(entity.getEmail());
+        dto.setIdEstado(entity.getIdEstado());
+        dto.setFechaSolicitud(
+                entity.getFechaSolicitud() != null ? entity.getFechaSolicitud().toString() : null
+        );
+        dto.setIdTipoPrestamo(String.valueOf(entity.getIdTipoPrestamo()));
+        dto.setDocumentoIdentificacion(entity.getDocumentoIdentificacion());
+        return dto;
     }
 }
