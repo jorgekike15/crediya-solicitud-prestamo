@@ -11,7 +11,7 @@ spring:
   devtools:
     add-properties: false
   r2dbc:
-    host: "localhost"
+    host: db_solicitudes
     port: 5432
     database: "crediya-solicitud-prestamo"
     schema: "public"
