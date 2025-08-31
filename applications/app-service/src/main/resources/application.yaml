@@ -43,6 +43,10 @@ adapter:
   restconsumer:
     timeout: 5000
     url: "http://localhost:9001"
+  sqs:
+    region: "us-east-2"
+    queue-url: "https://sqs.us-east-2.amazonaws.com/299635194354/crediya"
+    queue-arn: "arn:aws:sqs:us-east-2:299635194354:crediya"
 resilience4j:
   circuitbreaker:
     instances:

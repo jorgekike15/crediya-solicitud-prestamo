@@ -1,6 +1,8 @@
 package co.com.pragma.usecase.solicitud;
 
 import co.com.pragma.model.cliente.gateway.ClienteGateway;
+import co.com.pragma.model.messagesender.MessageSender;
+import co.com.pragma.model.messagesender.gateways.MessageSenderRepository;
 import co.com.pragma.model.solicitud.Solicitud;
 import co.com.pragma.model.solicitud.gateways.SolicitudRepository;
 import co.com.pragma.model.tipoprestamo.TipoPrestamo;
@@ -19,6 +21,7 @@ public class SolicitudUseCase implements SolicitudUseCasePort {
     private final SolicitudRepository solicitudRepository;
     private final ClienteGateway clienteGateway;
     private final TipoPrestamoUseCasePort tipoPrestamoUseCasePort;
+    private final MessageSenderRepository messageSenderRepository;
 
     @Override
     public Mono<Solicitud> crearSolicitud(Solicitud solicitud, String token) {
@@ -32,7 +35,7 @@ public class SolicitudUseCase implements SolicitudUseCasePort {
     }
 
     @Override
-    public Flux<Solicitud> findAllSolicitudes(){
+    public Flux<Solicitud> findAllSolicitudes() {
         return solicitudRepository.findAllSolicitudes();
     }
 
@@ -59,11 +62,30 @@ public class SolicitudUseCase implements SolicitudUseCasePort {
         );
     }
 
+
     @Override
     public Mono<Boolean> gestionarSolicitud(Integer idEstado, Integer idSolicitud) {
-        return solicitudRepository.updateSolicitud(idEstado, idSolicitud).flatMap( response ->{
-                return Mono.just(response > 0 ? Boolean.TRUE : Boolean.FALSE);
-        });
+        return solicitudRepository.updateSolicitud(idEstado, idSolicitud)
+                .flatMap(actualizado -> {
+                    if (actualizado.intValue() > 0) {
+                        return solicitudRepository.findById(idSolicitud)
+                                .flatMap(solicitud -> {
+                                    MessageSender message = new MessageSender();
+                                    String estado = String.valueOf(EstadoSolicitud.fromCodigo(idEstado.intValue()));
+                                    message.setEmail(solicitud.getEmail());
+                                    message.setMessage("Su solicitud de préstamo ha sido "
+                                            + estado.toString().replace("_", " ").toLowerCase() + ".");
+                                    return messageSenderRepository.sendMessage(message);
+                                }).thenReturn(true);
+                    }
+                    return Mono.just(false);
+                });
+    }
+
+
+    @Override
+    public Mono<Solicitud> findById(Integer idSolicitud) {
+        return solicitudRepository.findById(idSolicitud);
     }
 
 }

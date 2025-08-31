@@ -5,6 +5,7 @@ import co.com.pragma.api.dto.SolicitudDTO;
 import co.com.pragma.api.dto.SolicitudResponseDTO;
 import co.com.pragma.api.dto.SolicitudResponseGenericDTO;
 import co.com.pragma.api.mapper.SolicitudDTOMapper;
+import co.com.pragma.usecase.messagesender.in.MessageSenderUseCasePort;
 import co.com.pragma.usecase.solicitud.in.SolicitudUseCasePort;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ValidationException;
@@ -103,6 +104,7 @@ public class Handler {
                                         message = MessageFormat.format(
                                                 bundle.getString("log.solicitud.notupdated"), solicitudDTO.id());
                                     }
+
                                     log.info(message, solicitudUpdated);
                                     return ServerResponse.ok().bodyValue(
                                             new SolicitudResponseGenericDTO(Boolean.TRUE.equals(solicitudUpdated), message)

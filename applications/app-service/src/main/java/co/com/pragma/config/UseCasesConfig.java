@@ -1,6 +1,7 @@
 package co.com.pragma.config;
 
 import co.com.pragma.model.cliente.gateway.ClienteGateway;
+import co.com.pragma.model.messagesender.gateways.MessageSenderRepository;
 import co.com.pragma.model.solicitud.gateways.SolicitudRepository;
 import co.com.pragma.usecase.solicitud.SolicitudUseCase;
 import co.com.pragma.usecase.solicitud.in.SolicitudUseCasePort;
@@ -18,8 +19,13 @@ public class UseCasesConfig {
     private final SolicitudRepository solicitudRepository;
     private final ClienteGateway clienteGateway;
     private final TipoPrestamoUseCasePort tipoPrestamoUseCasePort;
+    private final MessageSenderRepository messageSenderRepository;
 
-    public UseCasesConfig(SolicitudRepository solicitudRepository, ClienteGateway clienteGateway, TipoPrestamoUseCasePort tipoPrestamoUseCasePort) {
+    public UseCasesConfig(SolicitudRepository solicitudRepository,
+                          ClienteGateway clienteGateway,
+                          TipoPrestamoUseCasePort tipoPrestamoUseCasePort,
+                          MessageSenderRepository messageSenderRepository) {
+        this.messageSenderRepository = messageSenderRepository;
         this.solicitudRepository = solicitudRepository;
         this.clienteGateway = clienteGateway;
         this.tipoPrestamoUseCasePort = tipoPrestamoUseCasePort;
@@ -28,6 +34,8 @@ public class UseCasesConfig {
     @Bean
     @Primary
     public SolicitudUseCasePort solicitudUseCasePort(){
-        return new SolicitudUseCase(solicitudRepository, clienteGateway, tipoPrestamoUseCasePort);
+        return new SolicitudUseCase(solicitudRepository, clienteGateway,
+                tipoPrestamoUseCasePort,
+                messageSenderRepository);
     }
 }

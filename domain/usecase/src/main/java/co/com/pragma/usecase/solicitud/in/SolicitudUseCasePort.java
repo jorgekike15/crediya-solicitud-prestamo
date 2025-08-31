@@ -7,6 +7,7 @@ import reactor.core.publisher.Mono;
 public interface SolicitudUseCasePort {
 
     Mono<Solicitud> crearSolicitud(Solicitud solicitud, String token);
+    Mono<Solicitud> findById(Integer idSolicitud);
     Flux<Solicitud> findAllSolicitudes();
     Flux<Solicitud> findSolicitudPendienteRechazadaRevision();
     Mono<Boolean> gestionarSolicitud(Integer idEstado, Integer idSolicitud);
