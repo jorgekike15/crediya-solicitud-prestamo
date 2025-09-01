@@ -92,10 +92,37 @@ public class RouterRest {
                                                                              "monto": "5000.0",
                                                                              "plazo": "12",
                                                                              "email": "usuario@correo.com",
-                                                                             "estadoSolicitud": "REVISION_MANUAL",
+                                                                             "estadoSolicitud": "PENDIENTE_REVISION",
                                                                              "fechaSolicitud": "2024-06-10",
                                                                              "tipoPrestamo": "VEHICULO",
                                                                              "documentoIdentificacion": "123456789"
+                                                                         },
+                                                                         ....""")
+                                            )
+                                    )
+                            }
+                    )
+            ),
+            @RouterOperation(
+                    path = "/api/v1/solicitud",
+                    method = RequestMethod.PUT,
+                    beanClass = Handler.class,
+                    beanMethod = "listenPUTGestionarSolicitud",
+                    operation = @Operation(
+                            operationId = "gestionarSolicitud",
+                            summary = "Gestionar una solicitud cambiando su estado actual",
+                            description = "Permite actualizar el estado de una solicitud existente",
+                            responses = {
+                                    @ApiResponse(
+                                            responseCode = "200",
+                                            description = "Solicitud gestionada exitosamente",
+                                            content = @Content(
+                                                    schema = @Schema(
+                                                            example = """
+                                                                    [
+                                                                         {
+                                                                                "success": true,
+                                                                                "message": "La solicitud ha sido actualizada exitosamente."
                                                                          },
                                                                          ....""")
                                             )

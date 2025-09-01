@@ -1,7 +1,10 @@
 package co.com.pragma.config;
 
 import co.com.pragma.model.cliente.gateway.ClienteGateway;
+import co.com.pragma.model.messagesender.gateways.MessageSenderRepository;
 import co.com.pragma.model.solicitud.gateways.SolicitudRepository;
+import co.com.pragma.model.tipoprestamo.gateways.TipoPrestamoRepository;
+import co.com.pragma.usecase.tipoprestamo.in.TipoPrestamoUseCasePort;
 import org.junit.jupiter.api.Test;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
@@ -10,7 +13,7 @@ import org.springframework.context.annotation.Import;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 
-public class UseCasesConfigTest {
+class UseCasesConfigTest {
 
     @Test
     void testUseCaseBeansExist() {
@@ -44,9 +47,22 @@ public class UseCasesConfigTest {
         }
 
         @Bean
+        public MessageSenderRepository messageSenderRepository() {return mock(MessageSenderRepository.class);}
+
+        @Bean
+        public TipoPrestamoRepository tipoPrestamoRepository() {return mock(TipoPrestamoRepository.class);}
+
+        @Bean
+        public TipoPrestamoUseCasePort tipoPrestamoUseCasePort() {
+            return mock(TipoPrestamoUseCasePort.class);
+        }
+
+        @Bean
         public MyUseCase myUseCase() {
             return new MyUseCase();
         }
+
+
     }
 
     static class MyUseCase {
