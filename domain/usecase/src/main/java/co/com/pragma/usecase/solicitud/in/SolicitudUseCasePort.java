@@ -9,6 +9,6 @@ public interface SolicitudUseCasePort {
     Mono<Solicitud> crearSolicitud(Solicitud solicitud, String token);
     Mono<Solicitud> findById(Integer idSolicitud);
     Flux<Solicitud> findAllSolicitudes();
-    Flux<Solicitud> findSolicitudPendienteRechazadaRevision();
+    Flux<Solicitud> findSolicitudPendienteRechazadaRevision(Integer page, Integer size);
     Mono<Boolean> gestionarSolicitud(Integer idEstado, Integer idSolicitud);
 }

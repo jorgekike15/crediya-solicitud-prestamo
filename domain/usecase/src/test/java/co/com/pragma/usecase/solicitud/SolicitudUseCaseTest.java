@@ -16,6 +16,7 @@ import reactor.test.StepVerifier;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -87,16 +88,11 @@ class SolicitudUseCaseTest {
         Solicitud s2 = new Solicitud();
         s2.setIdTipoPrestamo("2");
 
-        List<Integer> codigosEstados = List.of(
-                EstadoSolicitud.PENDIENTE_REVISION.getCodigo(),
-                EstadoSolicitud.REVISION_MANUAL.getCodigo(),
-                EstadoSolicitud.RECHAZADA.getCodigo()
-        );
-
         when(tipoPrestamoUseCasePort.consultAllTipoPrestamos()).thenReturn(Flux.just(tipo1, tipo2));
-        when(solicitudRepository.findSolicitudByEstadoIn(codigosEstados)).thenReturn(Flux.just(s1, s2));
+        when(solicitudRepository.findByIdEstadoInPaged(any(), anyInt(), anyInt()))
+                .thenReturn(Flux.just(s1, s2));
 
-        StepVerifier.create(solicitudUseCase.findSolicitudPendienteRechazadaRevision())
+        StepVerifier.create(solicitudUseCase.findSolicitudPendienteRechazadaRevision(0, 10))
                 .assertNext(sol -> {
                     assert sol.getTasaInteres() == 5.0;
                 })
@@ -106,7 +102,7 @@ class SolicitudUseCaseTest {
                 .verifyComplete();
 
         verify(tipoPrestamoUseCasePort).consultAllTipoPrestamos();
-        verify(solicitudRepository).findSolicitudByEstadoIn(codigosEstados);
+        verify(solicitudRepository).findByIdEstadoInPaged(any(), anyInt(), anyInt());
     }
 
     @Test

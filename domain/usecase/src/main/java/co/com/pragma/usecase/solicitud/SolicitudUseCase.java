@@ -40,7 +40,7 @@ public class SolicitudUseCase implements SolicitudUseCasePort {
     }
 
     @Override
-    public Flux<Solicitud> findSolicitudPendienteRechazadaRevision() {
+    public Flux<Solicitud> findSolicitudPendienteRechazadaRevision(Integer page, Integer size) {
         List<Integer> codigosEstados = List.of(
                 EstadoSolicitud.PENDIENTE_REVISION.getCodigo(),
                 EstadoSolicitud.REVISION_MANUAL.getCodigo(),
@@ -51,7 +51,7 @@ public class SolicitudUseCase implements SolicitudUseCasePort {
                 .collectMap(TipoPrestamo::getId);
 
         return tipoPrestamoMapMono.flatMapMany(tipoPrestamoMap ->
-                solicitudRepository.findSolicitudByEstadoIn(codigosEstados)
+                solicitudRepository.findByIdEstadoInPaged(codigosEstados, size, page * size)
                         .map(solicitud -> {
                             TipoPrestamo tipo = tipoPrestamoMap.get(Integer.valueOf(solicitud.getIdTipoPrestamo()));
                             if (tipo != null) {
