@@ -37,8 +37,9 @@ public class SolicitudReactiveRepositoryAdapter extends ReactiveAdapterOperation
     }
 
     @Override
-    public Flux<Solicitud> findSolicitudByEstadoIn(List<Integer> estados) {
-        return repository.findByIdEstadoIn(estados)
+    public Flux<Solicitud> findByIdEstadoInPaged(List<Integer> estados, int size, int offset) {
+
+        return repository.findByIdEstadoInPaged(estados, size, offset)
                 .map(entity -> {
                     Solicitud dto = new Solicitud();
                     dto.setMonto(String.valueOf(entity.getMonto()));

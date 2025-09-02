@@ -70,13 +70,21 @@ public class Handler {
                 .doFinally(signalType -> log.info("Fin de método: listenGETGetAllSolicitudes (señal: {})", signalType));
     }
 
+
+
     public Mono<ServerResponse> listenGETGetSolicitud(ServerRequest serverRequest) {
         if (log.isTraceEnabled()) {
             log.trace(MessageFormat.format(bundle.getString("log.method.start"), "listenGETGetSolicitud"));
         }
+        int page = serverRequest.queryParam("page")
+                .map(Integer::parseInt)
+                .orElse(0);
+        int size = serverRequest.queryParam("size")
+                .map(Integer::parseInt)
+                .orElse(10);
 
         return ServerResponse.ok()
-                .body(solicitudUseCasePort.findSolicitudPendienteRechazadaRevision()
+                .body(solicitudUseCasePort.findSolicitudPendienteRechazadaRevision(page, size)
                         .map(solicitudDTOMapper::toResponse), SolicitudResponseDTO.class)
                 .doOnError(e -> log.error(MessageFormat.format(bundle.getString("log.err.consult.all"), e)))
                 .doFinally(signalType -> log.info(
