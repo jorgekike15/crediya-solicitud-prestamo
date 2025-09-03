@@ -1,6 +1,7 @@
 package co.com.pragma.usecase.solicitud;
 
 import co.com.pragma.model.cliente.gateway.ClienteGateway;
+import co.com.pragma.model.messagesender.MessageAutoValidation;
 import co.com.pragma.model.messagesender.MessageSender;
 import co.com.pragma.model.messagesender.gateways.MessageSenderRepository;
 import co.com.pragma.model.solicitud.Solicitud;
@@ -23,15 +24,68 @@ public class SolicitudUseCase implements SolicitudUseCasePort {
     private final TipoPrestamoUseCasePort tipoPrestamoUseCasePort;
     private final MessageSenderRepository messageSenderRepository;
 
+
     @Override
     public Mono<Solicitud> crearSolicitud(Solicitud solicitud, String token) {
         return clienteGateway.usuarioExist(solicitud.getDocumentoIdentificacion(), token)
                 .flatMap(userValidation -> {
                     if (userValidation.isExist()) {
-                        return solicitudRepository.saveSolicitud(solicitud);
+                        return tipoPrestamoUseCasePort.consultTipoPrestamoById(Integer.parseInt(
+                                solicitud.getIdTipoPrestamo()))
+                                .flatMap( tipoPrestamo ->
+                                        {
+                                            solicitud.setTasaInteres(tipoPrestamo.getTasa_interes());
+                                            return solicitudRepository.saveSolicitud(solicitud)
+                                                    .flatMap(solicitudCreada ->
+                                                            isAutomaticValidation(solicitudCreada)
+                                                                    .flatMap(isAutomatic -> {
+                                                                        if (Boolean.TRUE.equals(isAutomatic)) {
+                                                                            processAutomaticValidation(solicitudCreada,
+                                                                                    token);
+                                                                        }
+                                                                        return Mono.just(solicitudCreada);
+                                                                    })
+                                                    );
+                                        }
+                                );
                     }
                     return Mono.error(new IllegalArgumentException(userValidation.getMessage()));
                 });
+    }
+
+    private Mono<Boolean> isAutomaticValidation(Solicitud solicitud) {
+        return tipoPrestamoUseCasePort.consultTipoPrestamoById(Integer.parseInt(solicitud.getIdTipoPrestamo()))
+                .flatMap(tipoPrestamo -> {
+                    if (tipoPrestamo.getValidacion_automatica() == (1)) {
+                        return Mono.just(true);
+                    }
+                    return Mono.just(false);
+                });
+    }
+
+    private void processAutomaticValidation(Solicitud solicitud, String token) {
+        solicitudRepository.findAllSolicitudesByDocument(solicitud.getDocumentoIdentificacion())
+                .filter(solicitud2 -> EstadoSolicitud.APROBADA.getCodigo() == solicitud2.getIdEstado())
+                .collectList()
+                .flatMap(solicitudesAProbadas ->
+
+                        clienteGateway.consultClienteByDocument(solicitud.getDocumentoIdentificacion(), token)
+                                .flatMap(cliente ->
+                                        tipoPrestamoUseCasePort.consultTipoPrestamoById(Integer.parseInt(solicitud.getIdTipoPrestamo()))
+                                                .flatMap(tipoPrestamo -> {
+                                                    MessageAutoValidation messageAutoValidation =
+                                                            new MessageAutoValidation(
+                                                                    solicitud.getId(),
+                                                                    cliente.getSalarioBase(),
+                                                                    Double.parseDouble(solicitud.getMonto()),
+                                                                    tipoPrestamo.getTasa_interes(),
+                                                                    Integer.parseInt(solicitud.getPlazo()),
+                                                                    solicitudesAProbadas
+                                                            );
+                                                    return messageSenderRepository.sendMessageAutoValidation(messageAutoValidation);
+                                                })
+                                )
+                ).subscribe();
     }
 
     @Override
@@ -62,10 +116,9 @@ public class SolicitudUseCase implements SolicitudUseCasePort {
         );
     }
 
-
     @Override
     public Mono<Boolean> gestionarSolicitud(Integer idEstado, Integer idSolicitud) {
-        return solicitudRepository.updateSolicitud(idEstado, idSolicitud)
+        return solicitudRepository.updateEstadoSolicitud(idEstado, idSolicitud)
                 .flatMap(actualizado -> {
                     if (actualizado.intValue() > 0) {
                         return solicitudRepository.findById(idSolicitud)
@@ -82,10 +135,5 @@ public class SolicitudUseCase implements SolicitudUseCasePort {
                 });
     }
 
-
-    @Override
-    public Mono<Solicitud> findById(Integer idSolicitud) {
-        return solicitudRepository.findById(idSolicitud);
-    }
 
 }

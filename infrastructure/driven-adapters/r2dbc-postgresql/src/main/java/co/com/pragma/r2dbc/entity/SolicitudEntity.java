@@ -19,5 +19,6 @@ public class SolicitudEntity {
     private String documentoIdentificacion;
     private LocalDate fechaSolicitud;
     private int plazo;
+    private Double tasaInteres;
 
 }

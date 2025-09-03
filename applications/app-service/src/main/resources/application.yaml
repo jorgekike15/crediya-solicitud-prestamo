@@ -11,8 +11,8 @@ spring:
   devtools:
     add-properties: false
   r2dbc:
-#    host: db_solicitudes
-    host: localhost
+    host: db_solicitudes
+#    host: localhost
     port: 5432
     database: "crediya-solicitud-prestamo"
     schema: "public"
@@ -36,17 +36,20 @@ management:
 logging:
   level:
     root: "INFO"
+
     co.com.pragma: "TRACE"
 cors:
   allowed-origins: "http://localhost:4200,http://localhost:8080"
 adapter:
   restconsumer:
     timeout: 5000
-    url: "http://localhost:9001"
+    url: "http://clientes:9001"
   sqs:
     region: "us-east-2"
-    queue-url: "https://sqs.us-east-2.amazonaws.com/299635194354/crediya"
-    queue-arn: "arn:aws:sqs:us-east-2:299635194354:crediya"
+    queue-notification-url: "https://sqs.us-east-2.amazonaws.com/299635194354/crediya"
+    queue-automatic-validation-url: "https://sqs.us-east-2.amazonaws.com/299635194354/solicitudValidationRequest"
+    queue-automatic-validation-response: "solicitudValidationResponse"
+
 resilience4j:
   circuitbreaker:
     instances:

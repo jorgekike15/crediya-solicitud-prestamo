@@ -17,5 +17,5 @@ public class Solicitud {
     private String fechaSolicitud;
     private String idTipoPrestamo;
     private String documentoIdentificacion;
-    private double tasaInteres;
+    private Double tasaInteres;
 }

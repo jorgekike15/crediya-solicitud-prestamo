@@ -52,10 +52,18 @@ public class SolicitudReactiveRepositoryAdapter extends ReactiveAdapterOperation
     }
 
     @Override
-    public Mono<Integer> updateSolicitud(Integer idEstado, Integer idSolicitud) {
+    public Mono<Integer> updateEstadoSolicitud(Integer idEstado, Integer idSolicitud) {
         return repository.updateIdEstadoByIdSolicitud(idEstado, idSolicitud)
                 .flatMap(rowAffected -> Mono.just(rowAffected));
     }
+
+    @Override
+    public Flux<Solicitud> findAllSolicitudesByDocument(String document) {
+        return repository.findAllByDocumentoIdentificacion(document)
+                .map(entity -> mapper.map(entity, Solicitud.class));
+    }
+
+
 
     public static Solicitud mapEntityToSolicitud(SolicitudEntity entity) {
         Solicitud dto = new Solicitud();

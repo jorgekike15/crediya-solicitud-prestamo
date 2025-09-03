@@ -16,5 +16,7 @@ public interface SolicitudRepository {
 
     Flux<Solicitud> findByIdEstadoInPaged(List<Integer> estados, int size, int offset);
 
-    Mono<Integer> updateSolicitud(Integer idSolicitud, Integer idEstado);
+    Mono<Integer> updateEstadoSolicitud(Integer idEstado, Integer idSolicitud);
+
+    Flux<Solicitud> findAllSolicitudesByDocument(String document);
 }

@@ -13,8 +13,6 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
-import java.util.List;
-
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.mock;
@@ -127,7 +125,7 @@ class SolicitudUseCaseTest {
         Solicitud solicitud = new Solicitud();
         solicitud.setEmail("test@email.com");
 
-        when(solicitudRepository.updateSolicitud(idEstado, idSolicitud)).thenReturn(Mono.just(1));
+        when(solicitudRepository.updateEstadoSolicitud(idEstado, idSolicitud)).thenReturn(Mono.just(1));
         when(solicitudRepository.findById(idSolicitud)).thenReturn(Mono.just(solicitud));
         when(messageSenderRepository.sendMessage(any())).thenReturn(Mono.empty());
 
@@ -135,7 +133,7 @@ class SolicitudUseCaseTest {
                 .expectNext(true)
                 .verifyComplete();
 
-        verify(solicitudRepository).updateSolicitud(idEstado, idSolicitud);
+        verify(solicitudRepository).updateEstadoSolicitud(idEstado, idSolicitud);
         verify(solicitudRepository).findById(idSolicitud);
         verify(messageSenderRepository).sendMessage(any());
     }
@@ -145,13 +143,13 @@ class SolicitudUseCaseTest {
         Integer idEstado = 1;
         Integer idSolicitud = 10;
 
-        when(solicitudRepository.updateSolicitud(idEstado, idSolicitud)).thenReturn(Mono.just(0));
+        when(solicitudRepository.updateEstadoSolicitud(idEstado, idSolicitud)).thenReturn(Mono.just(0));
 
         StepVerifier.create(solicitudUseCase.gestionarSolicitud(idEstado, idSolicitud))
                 .expectNext(false)
                 .verifyComplete();
 
-        verify(solicitudRepository).updateSolicitud(idEstado, idSolicitud);
+        verify(solicitudRepository).updateEstadoSolicitud(idEstado, idSolicitud);
         verify(solicitudRepository, never()).findById(any());
         verify(messageSenderRepository, never()).sendMessage(any());
     }
