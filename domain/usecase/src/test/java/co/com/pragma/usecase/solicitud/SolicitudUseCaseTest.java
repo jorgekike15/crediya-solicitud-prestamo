@@ -1,5 +1,6 @@
 package co.com.pragma.usecase.solicitud;
 
+import co.com.pragma.model.cliente.Cliente;
 import co.com.pragma.model.cliente.UserDocumentValidationResponse;
 import co.com.pragma.model.cliente.gateway.ClienteGateway;
 import co.com.pragma.model.messagesender.gateways.MessageSenderRepository;
@@ -12,6 +13,8 @@ import org.junit.jupiter.api.Test;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
+
+import java.lang.reflect.Method;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
@@ -43,13 +46,16 @@ class SolicitudUseCaseTest {
     }
 
     @Test
-    void crearSolicitud_clienteExiste_guardaSolicitud() {
+    void crearSolicitud_clienteExisteYTipoPrestamoValido_guardaSolicitud() {
         Solicitud solicitud = new Solicitud();
         solicitud.setDocumentoIdentificacion("123");
-        UserDocumentValidationResponse response = new UserDocumentValidationResponse(true,
-                "");
+        solicitud.setIdTipoPrestamo("1");
+
+        UserDocumentValidationResponse response = new UserDocumentValidationResponse(true, "");
+        TipoPrestamo tipoPrestamo = TipoPrestamo.builder().id(1).tasa_interes(0.15).validacion_automatica(0).build();
 
         when(clienteGateway.usuarioExist("123", token)).thenReturn(Mono.just(response));
+        when(tipoPrestamoUseCasePort.consultTipoPrestamoById(1)).thenReturn(Mono.just(tipoPrestamo));
         when(solicitudRepository.saveSolicitud(solicitud)).thenReturn(Mono.just(solicitud));
 
         StepVerifier.create(solicitudUseCase.crearSolicitud(solicitud, token))
@@ -63,8 +69,9 @@ class SolicitudUseCaseTest {
     void crearSolicitud_clienteNoExiste_lanzaError() {
         Solicitud solicitud = new Solicitud();
         solicitud.setDocumentoIdentificacion("123");
-        UserDocumentValidationResponse response = new UserDocumentValidationResponse(false,
-                "Cliente no existe");
+        solicitud.setIdTipoPrestamo("1");
+
+        UserDocumentValidationResponse response = new UserDocumentValidationResponse(false, "No existe");
 
         when(clienteGateway.usuarioExist("123", token)).thenReturn(Mono.just(response));
 
@@ -76,11 +83,60 @@ class SolicitudUseCaseTest {
     }
 
     @Test
+    void crearSolicitud_validacionAutomaticaActiva_ejecutaFlujoAutomatico() throws Exception {
+        Solicitud solicitud = new Solicitud();
+        solicitud.setDocumentoIdentificacion("123");
+        solicitud.setIdTipoPrestamo("1");
+        solicitud.setMonto("5000");
+        solicitud.setPlazo("12");
+
+        UserDocumentValidationResponse response = new UserDocumentValidationResponse(true, "");
+        TipoPrestamo tipoPrestamo = TipoPrestamo.builder().id(1).tasa_interes(0.15).validacion_automatica(1).build();
+
+        when(clienteGateway.usuarioExist("123", token)).thenReturn(Mono.just(response));
+        when(tipoPrestamoUseCasePort.consultTipoPrestamoById(1)).thenReturn(Mono.just(tipoPrestamo));
+        when(solicitudRepository.saveSolicitud(solicitud)).thenReturn(Mono.just(solicitud));
+
+        when(solicitudRepository.findAllSolicitudesByDocument("123")).thenReturn(Flux.empty());
+        Cliente cliente = new Cliente();
+        cliente.setDocumentoIdentificacion("123");
+        cliente.setSalarioBase(1000.0);
+        when(clienteGateway.consultClienteByDocument("123", token)).thenReturn(Mono.just(cliente));
+        when(messageSenderRepository.sendMessageAutoValidation(any())).thenReturn(Mono.empty());
+
+        StepVerifier.create(solicitudUseCase.crearSolicitud(solicitud, token))
+                .expectNext(solicitud)
+                .verifyComplete();
+
+        Thread.sleep(100);
+        verify(messageSenderRepository).sendMessageAutoValidation(any());
+    }
+
+    @Test
+    void crearSolicitud_validacionAutomaticaDesactivada_noEjecutaFlujoAutomatico() {
+        Solicitud solicitud = new Solicitud();
+        solicitud.setDocumentoIdentificacion("123");
+        solicitud.setIdTipoPrestamo("1");
+
+        UserDocumentValidationResponse response = new UserDocumentValidationResponse(true, "");
+        TipoPrestamo tipoPrestamo = TipoPrestamo.builder().id(1).tasa_interes(0.15).validacion_automatica(0).build();
+
+        when(clienteGateway.usuarioExist("123", token)).thenReturn(Mono.just(response));
+        when(tipoPrestamoUseCasePort.consultTipoPrestamoById(1)).thenReturn(Mono.just(tipoPrestamo));
+        when(solicitudRepository.saveSolicitud(solicitud)).thenReturn(Mono.just(solicitud));
+
+        StepVerifier.create(solicitudUseCase.crearSolicitud(solicitud, token))
+                .expectNext(solicitud)
+                .verifyComplete();
+
+        verify(messageSenderRepository, never()).sendMessageAutoValidation(any());
+    }
+
+    @Test
     void findSolicitudPendienteRechazadaRevision_retornaSolicitudesFiltradas() {
         TipoPrestamo tipo1 = TipoPrestamo.builder().id(1).tasa_interes(5.0).build();
         TipoPrestamo tipo2 = TipoPrestamo.builder().id(2).tasa_interes(7.5).build();
 
-        // Mock de solicitudes
         Solicitud s1 = new Solicitud();
         s1.setIdTipoPrestamo("1");
         Solicitud s2 = new Solicitud();
@@ -152,6 +208,76 @@ class SolicitudUseCaseTest {
         verify(solicitudRepository).updateEstadoSolicitud(idEstado, idSolicitud);
         verify(solicitudRepository, never()).findById(any());
         verify(messageSenderRepository, never()).sendMessage(any());
+    }
+
+
+    @Test
+    void isAutomaticValidation_retornaTrueCuandoValidacionAutomaticaEsUno() throws Exception {
+        Solicitud solicitud = new Solicitud();
+        solicitud.setIdTipoPrestamo("1");
+        TipoPrestamo tipoPrestamo = TipoPrestamo.builder().id(1).validacion_automatica(1).build();
+
+        when(tipoPrestamoUseCasePort.consultTipoPrestamoById(1)).thenReturn(Mono.just(tipoPrestamo));
+
+        Method method = SolicitudUseCase.class.getDeclaredMethod("isAutomaticValidation", Solicitud.class);
+        method.setAccessible(true);
+        Mono<Boolean> result = (Mono<Boolean>) method.invoke(solicitudUseCase, solicitud);
+
+        StepVerifier.create(result)
+                .expectNext(true)
+                .verifyComplete();
+    }
+
+    @Test
+    void isAutomaticValidation_retornaFalseCuandoValidacionAutomaticaEsCero() throws Exception {
+        Solicitud solicitud = new Solicitud();
+        solicitud.setIdTipoPrestamo("1");
+        TipoPrestamo tipoPrestamo = TipoPrestamo.builder().id(1).validacion_automatica(0).build();
+
+        when(tipoPrestamoUseCasePort.consultTipoPrestamoById(1)).thenReturn(Mono.just(tipoPrestamo));
+
+        Method method = SolicitudUseCase.class.getDeclaredMethod("isAutomaticValidation", Solicitud.class);
+        method.setAccessible(true);
+        Mono<Boolean> result = (Mono<Boolean>) method.invoke(solicitudUseCase, solicitud);
+
+        StepVerifier.create(result)
+                .expectNext(false)
+                .verifyComplete();
+    }
+
+    @Test
+    void processAutomaticValidation_enviaMensajeAutoValidation() throws Exception {
+        Solicitud solicitud = new Solicitud();
+        solicitud.setId(100);
+        solicitud.setDocumentoIdentificacion("123");
+        solicitud.setIdTipoPrestamo("1");
+        solicitud.setMonto("5000");
+        solicitud.setPlazo("12");
+
+        // Solicitudes aprobadas simuladas
+        Solicitud aprobada = new Solicitud();
+        aprobada.setIdEstado(2); // Estado APROBADA
+
+        Cliente cliente = new Cliente();
+        cliente.setDocumentoIdentificacion("123");
+        cliente.setSalarioBase(20000.0);
+
+        when(solicitudRepository.findAllSolicitudesByDocument("123"))
+                .thenReturn(Flux.just(aprobada));
+        when(clienteGateway.consultClienteByDocument("123", token))
+                .thenReturn(Mono.just(cliente));
+        when(tipoPrestamoUseCasePort.consultTipoPrestamoById(1))
+                .thenReturn(Mono.just(TipoPrestamo.builder().id(1).tasa_interes(0.15).build()));
+        when(messageSenderRepository.sendMessageAutoValidation(any()))
+                .thenReturn(Mono.empty());
+
+        Method method = SolicitudUseCase.class.getDeclaredMethod("processAutomaticValidation", Solicitud.class, String.class);
+        method.setAccessible(true);
+        method.invoke(solicitudUseCase, solicitud, token);
+
+        Thread.sleep(100);
+
+        verify(messageSenderRepository).sendMessageAutoValidation(any());
     }
 
 }
