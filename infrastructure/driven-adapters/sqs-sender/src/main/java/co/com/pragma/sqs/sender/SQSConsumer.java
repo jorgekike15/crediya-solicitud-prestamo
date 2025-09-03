@@ -1,6 +1,9 @@
 package co.com.pragma.sqs.sender;
 
+import co.com.pragma.model.messagesender.MessageSender;
+import co.com.pragma.model.messagesender.gateways.MessageSenderRepository;
 import co.com.pragma.model.solicitud.gateways.SolicitudRepository;
+import co.com.pragma.sqs.sender.enums.EstadoSolicitud;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -15,6 +18,7 @@ public class SQSConsumer {
 
     private final SolicitudRepository solicitudRepository;
     private final ObjectMapper mapper = new ObjectMapper();
+    private final MessageSenderRepository messageSenderRepository;
 
     public Mono<Void> procesarResultado(String mensaje) {
         log.info("Mensaje recibido en ValidacionConsumer: {}", mensaje);
@@ -32,6 +36,12 @@ public class SQSConsumer {
                 case "RECHAZADA" -> 3;
                 default -> 1;
             };
+
+            if (EstadoSolicitud.APROBADA.getCodigo() == codigoEstado) {
+                messageSenderRepository.sendMessageAutoIncrementalApproved(
+                        new MessageSender("", EstadoSolicitud.APROBADA.toString()))
+                        .subscribe();
+            }
 
             return solicitudRepository.updateEstadoSolicitud(codigoEstado, idSolicitud)
                     .flatMap(rowsUpdated -> {

@@ -29,6 +29,9 @@ public class SQSSender implements MessageSenderRepository {
     @Value("${adapter.sqs.queue-automatic-validation-url}")
     private String validacionQueueUrl;
 
+    @Value("${adapter.sqs.queue-contador-solicitudes-url}")
+    private String contadorSolicitudesQueueUrl;
+
     public Mono<String> send(String message, String urlQueue) {
         log.info("Inicio del envio de mensaje a la cola SQS: {} con mensaje: {}", urlQueue, message);
         return Mono.fromCallable(() -> buildRequest(message, urlQueue))
@@ -55,6 +58,12 @@ public class SQSSender implements MessageSenderRepository {
     public Mono<String> sendMessageAutoValidation(MessageAutoValidation messageAutoValidation) {
         return Mono.fromCallable(() -> toJson(messageAutoValidation)).flatMap(message ->
                 send(message, validacionQueueUrl ));
+    }
+
+    @Override
+    public Mono<String> sendMessageAutoIncrementalApproved(MessageSender messageSender) {
+        return Mono.fromCallable(() -> toJson(messageSender)).flatMap(message ->
+                send(message, contadorSolicitudesQueueUrl));
     }
 
     private <T> String toJson(T message) {

@@ -10,4 +10,6 @@ public interface MessageSenderRepository {
 
     Mono<String> sendMessageAutoValidation(MessageAutoValidation messageAutoValidation);
 
+    Mono<String> sendMessageAutoIncrementalApproved(MessageSender messageSender);
+
 }

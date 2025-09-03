@@ -12,7 +12,6 @@ spring:
     add-properties: false
   r2dbc:
     host: db_solicitudes
-#    host: localhost
     port: 5432
     database: "crediya-solicitud-prestamo"
     schema: "public"
@@ -49,6 +48,7 @@ adapter:
     queue-notification-url: "https://sqs.us-east-2.amazonaws.com/299635194354/crediya"
     queue-automatic-validation-url: "https://sqs.us-east-2.amazonaws.com/299635194354/solicitudValidationRequest"
     queue-automatic-validation-response: "solicitudValidationResponse"
+    queue-contador-solicitudes-url: "https://sqs.us-east-2.amazonaws.com/299635194354/contadorSolicitudesSQS"
 
 resilience4j:
   circuitbreaker:

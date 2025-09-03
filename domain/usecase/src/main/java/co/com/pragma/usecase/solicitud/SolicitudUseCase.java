@@ -123,16 +123,33 @@ public class SolicitudUseCase implements SolicitudUseCasePort {
                     if (actualizado.intValue() > 0) {
                         return solicitudRepository.findById(idSolicitud)
                                 .flatMap(solicitud -> {
-                                    MessageSender message = new MessageSender();
-                                    String estado = String.valueOf(EstadoSolicitud.fromCodigo(idEstado.intValue()));
-                                    message.setEmail(solicitud.getEmail());
-                                    message.setMessage("Su solicitud de préstamo ha sido "
-                                            + estado.toString().replace("_", " ").toLowerCase() + ".");
-                                    return messageSenderRepository.sendMessage(message);
-                                }).thenReturn(true);
+                                    sendNotifications(solicitud, idEstado);
+                                    return Mono.just(true);
+                                })
+                                .thenReturn(true);
                     }
                     return Mono.just(false);
                 });
+    }
+
+    private Mono<String> sendNotifications(Solicitud solicitud, Integer idEstado) {
+        MessageSender message = new MessageSender();
+        String estado = String.valueOf(EstadoSolicitud.fromCodigo(idEstado));
+        message.setEmail(solicitud.getEmail());
+        message.setMessage("Su solicitud de préstamo ha sido "
+                + estado.replace("_", " ").toLowerCase() + ".");
+
+        if(EstadoSolicitud.APROBADA.getCodigo() == idEstado)
+            sendMessageAutoIncrementalApproved(estado);
+
+        return messageSenderRepository.sendMessage(message);
+    }
+
+    private void sendMessageAutoIncrementalApproved(String estado) {
+        System.out.println("Enviando mensaje a la cola de contador de solicitudes para estado: " + estado);
+        MessageSender message = new MessageSender();
+        message.setMessage(estado);
+        messageSenderRepository.sendMessageAutoIncrementalApproved(message).subscribe();
     }
 
 
