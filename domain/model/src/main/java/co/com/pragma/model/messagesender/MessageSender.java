@@ -15,4 +15,5 @@ public class MessageSender {
 
     private String email;
     private String message;
+    private String message2;
 }

@@ -130,7 +130,7 @@ public class SolicitudUseCase implements SolicitudUseCasePort {
                                                     + estado.replace("_", " ").toLowerCase() + ".");
 
                                             if(EstadoSolicitud.APROBADA.getCodigo() == idEstado)
-                                                sendMessageAutoIncrementalApproved(estado);
+                                                sendMessageAutoIncrementalApproved(estado, solicitud.getMonto());
 
                                             return messageSenderRepository.sendMessage(message);
                                         }
@@ -141,10 +141,11 @@ public class SolicitudUseCase implements SolicitudUseCasePort {
                 });
     }
 
-    private void sendMessageAutoIncrementalApproved(String estado) {
+    private void sendMessageAutoIncrementalApproved(String estado, String monto) {
         System.out.println("Enviando mensaje a la cola de contador de solicitudes para estado: " + estado);
         MessageSender message = new MessageSender();
         message.setMessage(estado);
+        message.setMessage2(monto);
         messageSenderRepository.sendMessageAutoIncrementalApproved(message).subscribe();
     }
 

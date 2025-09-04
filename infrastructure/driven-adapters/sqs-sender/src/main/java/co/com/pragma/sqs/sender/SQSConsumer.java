@@ -38,9 +38,10 @@ public class SQSConsumer {
             };
 
             if (EstadoSolicitud.APROBADA.getCodigo() == codigoEstado) {
-                messageSenderRepository.sendMessageAutoIncrementalApproved(
-                        new MessageSender("", EstadoSolicitud.APROBADA.toString()))
-                        .subscribe();
+                solicitudRepository.findById(idSolicitud).flatMap(solicitudAprobada ->
+                        messageSenderRepository.sendMessageAutoIncrementalApproved(
+                                new MessageSender("", EstadoSolicitud.APROBADA.toString(), solicitudAprobada.getMonto()))
+                        ).subscribe();
             }
 
             return solicitudRepository.updateEstadoSolicitud(codigoEstado, idSolicitud)
