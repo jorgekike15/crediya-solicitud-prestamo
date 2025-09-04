@@ -68,7 +68,6 @@ public class SolicitudUseCase implements SolicitudUseCasePort {
                 .filter(solicitud2 -> EstadoSolicitud.APROBADA.getCodigo() == solicitud2.getIdEstado())
                 .collectList()
                 .flatMap(solicitudesAProbadas ->
-
                         clienteGateway.consultClienteByDocument(solicitud.getDocumentoIdentificacion(), token)
                                 .flatMap(cliente ->
                                         tipoPrestamoUseCasePort.consultTipoPrestamoById(Integer.parseInt(solicitud.getIdTipoPrestamo()))
@@ -122,27 +121,24 @@ public class SolicitudUseCase implements SolicitudUseCasePort {
                 .flatMap(actualizado -> {
                     if (actualizado.intValue() > 0) {
                         return solicitudRepository.findById(idSolicitud)
-                                .flatMap(solicitud -> {
-                                    sendNotifications(solicitud, idEstado);
-                                    return Mono.just(true);
-                                })
+                                .flatMap(solicitud ->
+                                        {
+                                            MessageSender message = new MessageSender();
+                                            String estado = String.valueOf(EstadoSolicitud.fromCodigo(idEstado));
+                                            message.setEmail(solicitud.getEmail());
+                                            message.setMessage("Su solicitud de préstamo ha sido "
+                                                    + estado.replace("_", " ").toLowerCase() + ".");
+
+                                            if(EstadoSolicitud.APROBADA.getCodigo() == idEstado)
+                                                sendMessageAutoIncrementalApproved(estado);
+
+                                            return messageSenderRepository.sendMessage(message);
+                                        }
+                                )
                                 .thenReturn(true);
                     }
                     return Mono.just(false);
                 });
-    }
-
-    private Mono<String> sendNotifications(Solicitud solicitud, Integer idEstado) {
-        MessageSender message = new MessageSender();
-        String estado = String.valueOf(EstadoSolicitud.fromCodigo(idEstado));
-        message.setEmail(solicitud.getEmail());
-        message.setMessage("Su solicitud de préstamo ha sido "
-                + estado.replace("_", " ").toLowerCase() + ".");
-
-        if(EstadoSolicitud.APROBADA.getCodigo() == idEstado)
-            sendMessageAutoIncrementalApproved(estado);
-
-        return messageSenderRepository.sendMessage(message);
     }
 
     private void sendMessageAutoIncrementalApproved(String estado) {

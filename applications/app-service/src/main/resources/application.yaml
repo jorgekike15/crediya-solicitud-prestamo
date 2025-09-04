@@ -14,6 +14,7 @@ spring:
     host: db_solicitudes
     port: 5432
     database: "crediya-solicitud-prestamo"
+
     schema: "public"
     username: "postgres"
     password: "postgres"
