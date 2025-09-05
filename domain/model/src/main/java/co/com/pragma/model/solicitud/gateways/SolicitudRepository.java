@@ -19,4 +19,6 @@ public interface SolicitudRepository {
     Mono<Integer> updateEstadoSolicitud(Integer idEstado, Integer idSolicitud);
 
     Flux<Solicitud> findAllSolicitudesByDocument(String document);
+
+    Mono<Long> countByIdEstadoIn (List<Integer> estados);
 }

@@ -1,7 +1,13 @@
 package co.com.pragma.api.dto;
 
 public record SolicitudDTO(
-        int id,
-        int idEstado
-) {
-}
+        String monto,
+        String plazo,
+        String email,
+        String estadoSolicitud,
+        String fechaSolicitud,
+        String tipoPrestamo,
+        String documentoIdentificacion,
+        double tasaInteres)
+{}
+

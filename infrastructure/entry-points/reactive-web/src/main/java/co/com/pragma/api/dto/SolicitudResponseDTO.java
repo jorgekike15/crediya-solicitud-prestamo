@@ -1,12 +1,8 @@
 package co.com.pragma.api.dto;
 
+import java.util.List;
+
 public record SolicitudResponseDTO(
-        String monto,
-        String plazo,
-        String email,
-        String estadoSolicitud,
-        String fechaSolicitud,
-        String tipoPrestamo,
-        String documentoIdentificacion,
-        double tasaInteres) {
+        int size,
+        List<SolicitudDTO> solicitudes) {
 }

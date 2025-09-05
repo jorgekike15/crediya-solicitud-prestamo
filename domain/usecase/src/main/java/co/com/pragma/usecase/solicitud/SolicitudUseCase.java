@@ -5,6 +5,7 @@ import co.com.pragma.model.messagesender.MessageAutoValidation;
 import co.com.pragma.model.messagesender.MessageSender;
 import co.com.pragma.model.messagesender.gateways.MessageSenderRepository;
 import co.com.pragma.model.solicitud.Solicitud;
+import co.com.pragma.model.solicitud.SolicitudResponse;
 import co.com.pragma.model.solicitud.gateways.SolicitudRepository;
 import co.com.pragma.model.tipoprestamo.TipoPrestamo;
 import co.com.pragma.usecase.solicitud.in.SolicitudUseCasePort;
@@ -93,7 +94,7 @@ public class SolicitudUseCase implements SolicitudUseCasePort {
     }
 
     @Override
-    public Flux<Solicitud> findSolicitudPendienteRechazadaRevision(Integer page, Integer size) {
+    public Mono<SolicitudResponse> findSolicitudPendienteRechazadaRevision(Integer page, Integer size) {
         List<Integer> codigosEstados = List.of(
                 EstadoSolicitud.PENDIENTE_REVISION.getCodigo(),
                 EstadoSolicitud.REVISION_MANUAL.getCodigo(),
@@ -103,7 +104,9 @@ public class SolicitudUseCase implements SolicitudUseCasePort {
         Mono<Map<Integer, TipoPrestamo>> tipoPrestamoMapMono = tipoPrestamoUseCasePort.consultAllTipoPrestamos()
                 .collectMap(TipoPrestamo::getId);
 
-        return tipoPrestamoMapMono.flatMapMany(tipoPrestamoMap ->
+        Mono<Long> totalMono = solicitudRepository.countByIdEstadoIn(codigosEstados);
+
+        Mono<List<Solicitud>> solicitudesMono = tipoPrestamoMapMono.flatMap(tipoPrestamoMap ->
                 solicitudRepository.findByIdEstadoInPaged(codigosEstados, size, page * size)
                         .map(solicitud -> {
                             TipoPrestamo tipo = tipoPrestamoMap.get(Integer.valueOf(solicitud.getIdTipoPrestamo()));
@@ -112,7 +115,15 @@ public class SolicitudUseCase implements SolicitudUseCasePort {
                             }
                             return solicitud;
                         })
+                        .collectList()
         );
+
+        return Mono.zip(totalMono, solicitudesMono)
+                .map(tuple -> SolicitudResponse.builder()
+                        .size(tuple.getT1().intValue())
+                        .solicitudes(tuple.getT2())
+                        .build()
+                );
     }
 
     @Override

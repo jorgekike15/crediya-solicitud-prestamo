@@ -63,6 +63,10 @@ public class SolicitudReactiveRepositoryAdapter extends ReactiveAdapterOperation
                 .map(entity -> mapper.map(entity, Solicitud.class));
     }
 
+    @Override
+    public Mono<Long> countByIdEstadoIn(List<Integer> estados) {
+        return repository.countByIdEstadoIn(estados);
+    }
 
 
     public static Solicitud mapEntityToSolicitud(SolicitudEntity entity) {

@@ -1,11 +1,10 @@
 package co.com.pragma.api;
 
 import co.com.pragma.api.dto.CreateSolicitudDTO;
-import co.com.pragma.api.dto.SolicitudDTO;
+import co.com.pragma.api.dto.SolicitudRequestDTO;
 import co.com.pragma.api.dto.SolicitudResponseDTO;
 import co.com.pragma.api.dto.SolicitudResponseGenericDTO;
 import co.com.pragma.api.mapper.SolicitudDTOMapper;
-import co.com.pragma.usecase.messagesender.in.MessageSenderUseCasePort;
 import co.com.pragma.usecase.solicitud.in.SolicitudUseCasePort;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ValidationException;
@@ -68,17 +67,16 @@ public class Handler {
     public Mono<ServerResponse> listenGETGetAllSolicitudes(ServerRequest serverRequest) {
         log.info("Inicio de método: listenGETGetAllSolicitudes");
         return ServerResponse.ok()
-                .body(solicitudUseCasePort.findAllSolicitudes().map(solicitudDTOMapper::toResponse), SolicitudResponseDTO.class)
+                .body(solicitudUseCasePort.findAllSolicitudes()
+                                .map(solicitudDTOMapper::toResponse)
+                        , SolicitudResponseDTO.class)
                 .doOnError(e -> log.error("Error al consultar todas las solicitudes", e))
                 .doFinally(signalType -> log.info("Fin de método: listenGETGetAllSolicitudes (señal: {})", signalType));
     }
 
 
-
     public Mono<ServerResponse> listenGETGetSolicitud(ServerRequest serverRequest) {
-        if (log.isTraceEnabled()) {
-            log.trace(MessageFormat.format(bundle.getString("log.method.start"), "listenGETGetSolicitud"));
-        }
+        log.info(MessageFormat.format(bundle.getString("log.method.start"), "listenGETGetSolicitud"));
         int page = serverRequest.queryParam("page")
                 .map(Integer::parseInt)
                 .orElse(0);
@@ -86,9 +84,9 @@ public class Handler {
                 .map(Integer::parseInt)
                 .orElse(10);
 
-        return ServerResponse.ok()
-                .body(solicitudUseCasePort.findSolicitudPendienteRechazadaRevision(page, size)
-                        .map(solicitudDTOMapper::toResponse), SolicitudResponseDTO.class)
+        return solicitudUseCasePort.findSolicitudPendienteRechazadaRevision(page, size)
+                .map(solicitudDTOMapper::toResponseDTO)
+                .flatMap(dto -> ServerResponse.ok().bodyValue(dto))
                 .doOnError(e -> log.error(MessageFormat.format(bundle.getString("log.err.consult.all"), e)))
                 .doFinally(signalType -> log.info(
                         MessageFormat.format(bundle.getString("log.method.end"),
@@ -101,16 +99,16 @@ public class Handler {
             log.trace(MessageFormat.format(bundle.getString("log.method.start"), "listenPUTGestionarSolicitud"));
         }
 
-        return serverRequest.bodyToMono(SolicitudDTO.class)
-                .flatMap(solicitudDTO ->
-                        solicitudUseCasePort.gestionarSolicitud(solicitudDTO.idEstado(), solicitudDTO.id())
+        return serverRequest.bodyToMono(SolicitudRequestDTO.class)
+                .flatMap(solicitudRequestDTO ->
+                        solicitudUseCasePort.gestionarSolicitud(solicitudRequestDTO.idEstado(), solicitudRequestDTO.id())
                                 .flatMap(solicitudUpdated -> {
                                     String message;
-                                    if(Boolean.TRUE.equals(solicitudUpdated)) {
+                                    if (Boolean.TRUE.equals(solicitudUpdated)) {
                                         message = bundle.getString("log.solicitud.updated");
-                                    }else{
+                                    } else {
                                         message = MessageFormat.format(
-                                                bundle.getString("log.solicitud.notupdated"), solicitudDTO.id());
+                                                bundle.getString("log.solicitud.notupdated"), solicitudRequestDTO.id());
                                     }
 
                                     log.info(message, solicitudUpdated);

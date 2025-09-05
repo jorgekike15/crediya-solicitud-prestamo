@@ -22,4 +22,8 @@ public interface SolicitudReactiveRepository extends ReactiveCrudRepository<Soli
     Mono<Integer> updateIdEstadoByIdSolicitud(@Param("idEstado") Integer idEstado, @Param("idSolicitud") Integer idSolicitud);
 
     Flux<SolicitudEntity> findAllByDocumentoIdentificacion (String documentoIdentificacion);
+
+    @Query("SELECT count(*) FROM solicitudes WHERE id_estado IN (:estados)")
+    Mono<Long> countByIdEstadoIn(List<Integer> estados);
+
 }
